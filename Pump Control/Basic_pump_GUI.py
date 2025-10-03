@@ -94,6 +94,34 @@ class mainWindow(QtWidgets.QMainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("Pump Controller", "Pump Controller"))
     
+   
+    #zak's addition
+    def run_flowrate_sequence_from_csv(self, csv_file, delay=30):
+        """
+        Run a sequence of flow rates on both pumps from a CSV file.
+        CSV must contain columns 'flow_rate_a' and 'flow_rate_b'.
+        delay: seconds to wait at each step
+        """
+        import pandas as pd
+        import time
+
+        df = pd.read_csv(csv_file)
+
+        if not {"flow_rate_a", "flow_rate_b"}.issubset(df.columns):
+            raise ValueError("CSV must contain 'flow_rate_a' and 'flow_rate_b' columns")
+
+        for i, row in df.iterrows():
+            # Pump A
+            self.pump1.setFlowrateText.setText(str(row["flow_rate_a"]))
+            self.pump1.setFlowrate()
+
+            # Pump B
+            self.pump2.setFlowrateText.setText(str(row["flow_rate_b"]))
+            self.pump2.setFlowrate()
+
+            print(f"[Step {i}] Pump A = {row['flow_rate_a']} | Pump B = {row['flow_rate_b']}")
+
+            time.sleep(delay)
 
 
 
@@ -102,6 +130,7 @@ if __name__ == "__main__":
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps)
     app = QtWidgets.QApplication(sys.argv)
+    
     MainWindow = mainWindow()
     ui = mainWindow()
     ui.setupUi(MainWindow)
