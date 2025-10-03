@@ -129,7 +129,7 @@ class mainWindow(QtWidgets.QMainWindow):
 
             flow_a = float(row["flow_rate_a"])
             flow_b = float(row["flow_rate_b"])
-            
+
             if flow_a > self.MAX_FLOWRATE or flow_b > self.MAX_FLOWRATE:
                 self.emergency_stop(
                 f"CSV step {i}: Flow too high (A={flow_a}, B={flow_b}, limit={self.MAX_FLOWRATE})"
@@ -162,13 +162,13 @@ if __name__ == "__main__":
     MainWindow.setMinimumSize(1200, 600)
     MainWindow.show()
 
-    def test_sequence():
+    def test_sequence(): 
         print("Starting test of Zak's CSV flowrate sequence...")
         csv_path = os.path.join(os.path.dirname(__file__), "doe_points_with_flows.csv")
         MainWindow.run_flowrate_sequence_from_csv(csv_path, delay=5)
         print("Finished test sequence.")
 
-    threading.Thread(target=test_sequence, daemon=True).start()
+    threading.Thread(target=test_sequence, daemon=True).start() # test sequence acitvate
     sys.exit(app.exec_())
 
 
