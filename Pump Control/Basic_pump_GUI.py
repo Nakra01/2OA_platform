@@ -12,10 +12,14 @@ import pandas as pd
 from PyQt5.QtCore import pyqtSlot
 import pumpWidget as pw
 import datetime
-
-
+import threading
+import os
+import time
 
 class mainWindow(QtWidgets.QMainWindow):
+
+    MAX_FLOWRATE = 4.0 #ml min
+
     def __init__(self):
         super(mainWindow, self).__init__()
         global windowRun
@@ -62,20 +66,32 @@ class mainWindow(QtWidgets.QMainWindow):
 
 
     def setFlowrates(self, pump):
-        flowRate = pump.setFlowrateText.text()
-        print("fR=",flowRate)
-        # pumpModel = pump.pumpModelCombo.currentText()
-        # print(pumpModel)
+        flowRate_str = pump.setFlowrateText.text()
+        try:
+            flowRate = float(flowRate_str)
+        except ValueError:
+            print("Invalid flow rate input")
+            return
+
+        if flowRate > self.MAX_FLOWRATE:
+            self.emergency_stop(
+                f"Requested {flowRate} mL/min > safety limit of {self.MAX_FLOWRATE} mL/min!"
+            )
+            return
+
         pump.setFlowrate()
-        # try:
-        #     if pumpModel == 'MilliGAT HF':
-        #         pump.set_flow_rate(float(flowRate), pump_type='HF')
-        #     elif pumpModel == "MilliGAT LF":
-        #         pump.set_flow_rate(float(flowRate), pump_type="LF")
-        #     elif pumpModel == 'Chemyx Fusion 6000X':
-        #         pump.setRate(rate=flowRate, x=0)
-        # except:
-        #     print('No pump connected')
+        print(f"Pump {pump.pumpName} running at {flowRate} mL/min")
+
+    
+    # zak emergency stop for too high flow rate
+    def emergency_Stop(self, message='Emergency stop triggered'):
+        print(f"X {message}")
+        try:
+            for pump in self.pumps:
+                pump.stop()
+        except Exception as e:
+            print(f"Error While stopping pumps: {e}")
+
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("Pump Controller")
@@ -102,8 +118,7 @@ class mainWindow(QtWidgets.QMainWindow):
         CSV must contain columns 'flow_rate_a' and 'flow_rate_b'.
         delay: seconds to wait at each step
         """
-        import pandas as pd
-        import time
+        
 
         df = pd.read_csv(csv_file)
 
@@ -111,6 +126,16 @@ class mainWindow(QtWidgets.QMainWindow):
             raise ValueError("CSV must contain 'flow_rate_a' and 'flow_rate_b' columns")
 
         for i, row in df.iterrows():
+
+            flow_a = float(row["flow_rate_a"])
+            flow_b = float(row["flow_rate_b"])
+            
+            if flow_a > self.MAX_FLOWRATE or flow_b > self.MAX_FLOWRATE:
+                self.emergency_stop(
+                f"CSV step {i}: Flow too high (A={flow_a}, B={flow_b}, limit={self.MAX_FLOWRATE})"
+                )
+                return
+
             # Pump A
             self.pump1.setFlowrateText.setText(str(row["flow_rate_a"]))
             self.pump1.setFlowrate()
@@ -136,6 +161,14 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.setMinimumSize(1200, 600)
     MainWindow.show()
+
+    def test_sequence():
+        print("Starting test of Zak's CSV flowrate sequence...")
+        csv_path = os.path.join(os.path.dirname(__file__), "doe_points_with_flows.csv")
+        MainWindow.run_flowrate_sequence_from_csv(csv_path, delay=5)
+        print("Finished test sequence.")
+
+    threading.Thread(target=test_sequence, daemon=True).start()
     sys.exit(app.exec_())
 
 
