@@ -112,7 +112,7 @@ class mainWindow(QtWidgets.QMainWindow):
     
    
     #zak's addition
-    def run_flowrate_sequence_from_csv(self, csv_file, delay=30):
+    def run_flowrate_sequence_from_csv(self, csv_file):
         """
         Run a sequence of flow rates on both pumps from a CSV file.
         CSV must contain columns 'flow_rate_a' and 'flow_rate_b'.
@@ -121,6 +121,8 @@ class mainWindow(QtWidgets.QMainWindow):
         
 
         df = pd.read_csv(csv_file)
+
+        delay = 3*df. ######## add 3 x reactor residence time ############
 
         if not {"flow_rate_a", "flow_rate_b"}.issubset(df.columns):
             raise ValueError("CSV must contain 'flow_rate_a' and 'flow_rate_b' columns")
