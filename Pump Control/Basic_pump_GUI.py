@@ -122,10 +122,11 @@ class mainWindow(QtWidgets.QMainWindow):
 
         df = pd.read_csv(csv_file)
 
-        delay = 3*df. ######## add 3 x reactor residence time ############
+       
+        
 
-        if not {"flow_rate_a", "flow_rate_b"}.issubset(df.columns):
-            raise ValueError("CSV must contain 'flow_rate_a' and 'flow_rate_b' columns")
+        if not {"flow_rate_a", "flow_rate_b","y_res_time"}.issubset(df.columns):
+            raise ValueError("CSV must contain 'flow_rate_a','flow_rate_b', and 'y_res_time' columns")
 
         for i, row in df.iterrows():
 
@@ -137,6 +138,9 @@ class mainWindow(QtWidgets.QMainWindow):
                 f"CSV step {i}: Flow too high (A={flow_a}, B={flow_b}, limit={self.MAX_FLOWRATE})"
                 )
                 return
+            
+            
+            delay = (3*row["y_res_time"])*0.5
 
             # Pump A
             self.pump1.setFlowrateText.setText(str(row["flow_rate_a"]))
@@ -167,7 +171,7 @@ if __name__ == "__main__":
     def test_sequence(): 
         print("Starting test of Zak's CSV flowrate sequence...")
         csv_path = os.path.join(os.path.dirname(__file__), "doe_points_with_flows.csv")
-        MainWindow.run_flowrate_sequence_from_csv(csv_path, delay=5)
+        MainWindow.run_flowrate_sequence_from_csv(csv_path)
         print("Finished test sequence.")
 
     threading.Thread(target=test_sequence, daemon=True).start() # test sequence acitvate
